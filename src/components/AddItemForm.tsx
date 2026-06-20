@@ -17,7 +17,7 @@ export default function AddItemForm({ onAdd }: Props) {
   const [countError, setCountError] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent) {
+  function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setNameError('')
     setCountError('')
@@ -33,6 +33,10 @@ export default function AddItemForm({ onAdd }: Props) {
     }
     if (!valid) return
 
+    submitItem()
+  }
+
+  async function submitItem() {
     setSubmitting(true)
     try {
       const item = await addItem({
@@ -54,7 +58,7 @@ export default function AddItemForm({ onAdd }: Props) {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-4 border border-gray-200 rounded-lg bg-white">
+    <form onSubmit={handleSubmit} noValidate className="flex flex-col gap-3 p-4 border border-gray-200 rounded-lg bg-white">
       <div>
         <input
           type="text"
