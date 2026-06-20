@@ -1,0 +1,2 @@
+-- Schema defined in Epic 2.
+-- Run this file in Supabase SQL Editor after adding table definitions.
