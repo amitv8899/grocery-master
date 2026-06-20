@@ -9,6 +9,9 @@ export type Ingredient = {
 
 export type Database = {
   public: {
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
     Tables: {
       items: {
         Row: {
@@ -41,6 +44,7 @@ export type Database = {
           deleted_at?: string | null
           created_at?: string
         }
+        Relationships: []
       }
       recipes: {
         Row: {
@@ -64,6 +68,7 @@ export type Database = {
           deleted_at?: string | null
           created_at?: string
         }
+        Relationships: []
       }
     }
   }
