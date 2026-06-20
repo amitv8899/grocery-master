@@ -2,8 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --background: #F1EFE8;
+  --foreground: #1B1A17;
+}
+
 /* Prevent pull-to-refresh on iOS — grocery list should feel native */
 html,
 body {
   overscroll-behavior: none;
+  background: #F1EFE8;
+}
+
+:focus-visible {
+  outline: 2px solid #1D9E75;
+  outline-offset: 2px;
 }
