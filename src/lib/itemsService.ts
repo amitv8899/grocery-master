@@ -28,7 +28,7 @@ export async function addItem(data: {
 
 export async function updateItem(
   id: string,
-  data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label'>>
+  data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label' | 'checked'>>
 ): Promise<Item> {
   const { data: item, error } = await supabase
     .from('items')
