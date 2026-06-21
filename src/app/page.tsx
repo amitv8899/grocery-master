@@ -83,7 +83,7 @@ export default function Home() {
     }
   }
 
-  if (loading) {
+  if (loading && items.length === 0) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-warm-bg">
         <p className="text-sm text-warm-sub">Loading…</p>
@@ -110,14 +110,38 @@ export default function Home() {
       {/* Header */}
       <header className="bg-warm-card border-b border-warm-border px-5 py-3 flex items-center justify-between sticky top-0 z-10">
         <h1 className="text-lg font-medium text-warm-text">Our Groceries</h1>
-        {hasChecked && (
+        <div className="flex items-center gap-3">
+          {hasChecked && (
+            <button
+              onClick={handleClearBought}
+              className="text-xs text-warm-sub hover:text-warm-text transition-colors"
+            >
+              Clear bought
+            </button>
+          )}
           <button
-            onClick={handleClearBought}
-            className="text-xs text-warm-sub hover:text-warm-text transition-colors"
+            onClick={load}
+            disabled={loading}
+            aria-label="Refresh list"
+            className="text-warm-sub hover:text-warm-text transition-colors disabled:opacity-40"
           >
-            Clear bought
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className={loading ? 'animate-spin' : ''}
+            >
+              <path d="M21 12a9 9 0 1 1-9-9c2.52 0 4.93 1 6.74 2.74L21 8" />
+              <path d="M21 3v5h-5" />
+            </svg>
           </button>
-        )}
+        </div>
       </header>
 
       {/* List */}
