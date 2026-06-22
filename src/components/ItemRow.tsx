@@ -10,6 +10,7 @@ type Props = {
   item: Item
   labelColor: LabelColor
   onCheck: () => void
+  onUncheck?: () => void
   onUpdate: (data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label'>>) => void
   onDelete: () => void
 }
@@ -20,7 +21,7 @@ const priorityRank: Record<Priority, string> = {
   low: '#3',
 }
 
-export default function ItemRow({ item, labelColor, onCheck, onUpdate, onDelete }: Props) {
+export default function ItemRow({ item, labelColor, onCheck, onUncheck, onUpdate, onDelete }: Props) {
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(item.name)
   const [priority, setPriority] = useState<Priority>(item.priority)
@@ -101,8 +102,8 @@ export default function ItemRow({ item, labelColor, onCheck, onUpdate, onDelete 
     <div className="bg-warm-card rounded-xl border border-warm-border mb-1.5 flex items-center overflow-hidden">
       {/* Checkbox strip */}
       <button
-        onClick={onCheck}
-        aria-label={item.checked ? 'Checked' : 'Mark as bought'}
+        onClick={item.checked && onUncheck ? onUncheck : onCheck}
+        aria-label={item.checked ? 'Mark as not bought' : 'Mark as bought'}
         className="w-[52px] self-stretch border-r border-warm-border flex items-center justify-center flex-shrink-0"
       >
         <span

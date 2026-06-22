@@ -1,14 +1,18 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import type { Item } from '@/lib/types'
-import { fetchItems, checkItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
+import type { Item, Recipe } from '@/lib/types'
+import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
+import { fetchRecipes, deleteRecipe, addRecipeToList } from '@/lib/recipesService'
 import { groupItems } from '@/lib/groupItems'
 import AddItemForm from '@/components/AddItemForm'
+import ItemRow from '@/components/ItemRow'
 import LabelGroup from '@/components/LabelGroup'
 import FAB from '@/components/FAB'
 import BottomSheet from '@/components/BottomSheet'
 import TabBar from '@/components/TabBar'
+import RecipesList from '@/components/RecipesList'
+import RecipeForm from '@/components/RecipeForm'
 
 type Tab = 'list' | 'recipes'
 
@@ -18,6 +22,11 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null)
   const [sheetOpen, setSheetOpen] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>('list')
+  const [recipes, setRecipes] = useState<Recipe[]>([])
+  const [recipesLoading, setRecipesLoading] = useState(true)
+  const [recipesError, setRecipesError] = useState<string | null>(null)
+  const [recipeSheetOpen, setRecipeSheetOpen] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -32,16 +41,68 @@ export default function Home() {
     }
   }
 
+  async function loadRecipes() {
+    setRecipesLoading(true)
+    setRecipesError(null)
+    try {
+      setRecipes(await fetchRecipes())
+    } catch {
+      setRecipesError('Failed to load recipes.')
+    } finally {
+      setRecipesLoading(false)
+    }
+  }
+
+  function showToast(msg: string) {
+    setToast(msg)
+    setTimeout(() => setToast(null), 2500)
+  }
+
   useEffect(() => {
     load()
+    loadRecipes()
   }, [])
 
-  const groups = useMemo(() => groupItems(items), [items])
-  const hasChecked = items.some((i) => i.checked && i.deleted_at === null)
+  const { groups, boughtItems } = useMemo(() => groupItems(items), [items])
+  const hasChecked = boughtItems.length > 0
 
   function handleAdd(item: Item) {
     setItems((prev) => [...prev, item])
     setSheetOpen(false)
+  }
+
+  function handleRecipeAdd(recipe: Recipe) {
+    setRecipes((prev) => [...prev, recipe])
+    setRecipeSheetOpen(false)
+  }
+
+  function handleRecipeUpdate(updated: Recipe) {
+    setRecipes((prev) => prev.map((r) => (r.id === updated.id ? updated : r)))
+  }
+
+  async function handleRecipeDelete(id: string) {
+    setRecipes((prev) => prev.filter((r) => r.id !== id))
+    try {
+      await deleteRecipe(id)
+    } catch {
+      loadRecipes()
+    }
+  }
+
+  async function handleAddToList(recipe: Recipe) {
+    try {
+      const upserted = await addRecipeToList(recipe, items)
+      setItems((prev) => {
+        const map = new Map(prev.map((i) => [i.id, i]))
+        upserted.forEach((i) => map.set(i.id, i))
+        return Array.from(map.values())
+      })
+      const n = recipe.ingredients.length
+      showToast(`Added ${n} ingredient${n === 1 ? '' : 's'}`)
+      setActiveTab('list')
+    } catch {
+      showToast('Failed to add to list.')
+    }
   }
 
   async function handleCheck(id: string) {
@@ -69,6 +130,15 @@ export default function Home() {
     setItems((prev) => prev.filter((i) => i.id !== id))
     try {
       await deleteItem(id)
+    } catch {
+      load()
+    }
+  }
+
+  async function handleUncheck(id: string) {
+    setItems((prev) => prev.map((i) => (i.id === id ? { ...i, checked: false } : i)))
+    try {
+      await uncheckItem(id)
     } catch {
       load()
     }
@@ -147,35 +217,76 @@ export default function Home() {
       {/* List */}
       <div className="px-3 pt-2.5 pb-40">
         {activeTab === 'list' ? (
-          groups.length === 0 ? (
+          groups.length === 0 && boughtItems.length === 0 ? (
             <p className="text-sm text-warm-sub text-center py-16">
               No items yet. Tap + to add something.
             </p>
           ) : (
-            groups.map((group) => (
-              <LabelGroup
-                key={group.label}
-                label={group.label}
-                items={group.items}
-                onCheck={handleCheck}
-                onUpdate={handleUpdate}
-                onDelete={handleDelete}
-              />
-            ))
+            <>
+              {groups.map((group) => (
+                <LabelGroup
+                  key={group.label}
+                  label={group.label}
+                  items={group.items}
+                  onCheck={handleCheck}
+                  onUpdate={handleUpdate}
+                  onDelete={handleDelete}
+                />
+              ))}
+              {boughtItems.length > 0 && (
+                <div className="mb-2 mt-1">
+                  <div className="flex items-center gap-2 px-1 pt-2.5 pb-1.5">
+                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-warm-muted" />
+                    <span className="text-[10px] font-semibold tracking-widest uppercase text-warm-fade">
+                      Bought
+                    </span>
+                  </div>
+                  {boughtItems.map((item) => (
+                    <ItemRow
+                      key={item.id}
+                      item={item}
+                      labelColor={{ dot: '#aaa', bg: '#f0f0f0', text: '#888' }}
+                      onCheck={() => {}}
+                      onUncheck={() => handleUncheck(item.id)}
+                      onUpdate={() => {}}
+                      onDelete={() => handleDelete(item.id)}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )
         ) : (
-          <p className="text-sm text-warm-sub text-center py-16">
-            Recipes coming soon.
-          </p>
+          <RecipesList
+            recipes={recipes}
+            loading={recipesLoading}
+            error={recipesError}
+            onUpdate={handleRecipeUpdate}
+            onDelete={handleRecipeDelete}
+            onAddToList={handleAddToList}
+            onRetry={loadRecipes}
+          />
         )}
       </div>
 
+      {/* Toast */}
+      {toast && (
+        <div className="fixed bottom-[88px] left-4 right-4 z-30 bg-warm-text text-white text-sm text-center py-3 rounded-xl shadow-lg pointer-events-none">
+          {toast}
+        </div>
+      )}
+
       {/* FAB */}
-      <FAB onClick={() => setSheetOpen(true)} />
+      <FAB onClick={() => activeTab === 'list' ? setSheetOpen(true) : setRecipeSheetOpen(true)} />
 
       {/* Add item sheet */}
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
         <AddItemForm onAdd={handleAdd} />
+      </BottomSheet>
+
+      {/* Add recipe sheet */}
+      <BottomSheet open={recipeSheetOpen} onClose={() => setRecipeSheetOpen(false)}>
+        <RecipeForm onAdd={handleRecipeAdd} />
       </BottomSheet>
 
       {/* Tab bar */}

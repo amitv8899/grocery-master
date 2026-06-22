@@ -28,7 +28,7 @@ export async function addItem(data: {
 
 export async function updateItem(
   id: string,
-  data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label'>>
+  data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label' | 'checked'>>
 ): Promise<Item> {
   const { data: item, error } = await supabase
     .from('items')
@@ -44,6 +44,14 @@ export async function checkItem(id: string): Promise<void> {
   const { error } = await supabase
     .from('items')
     .update({ checked: true })
+    .eq('id', id)
+  if (error) throw error
+}
+
+export async function uncheckItem(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('items')
+    .update({ checked: false })
     .eq('id', id)
   if (error) throw error
 }

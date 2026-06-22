@@ -7,8 +7,16 @@ export type LabelGroup = {
   items: Item[]
 }
 
-export function groupItems(items: Item[]): LabelGroup[] {
+export type GroupItemsResult = {
+  groups: LabelGroup[]
+  boughtItems: Item[]
+}
+
+export function groupItems(items: Item[]): GroupItemsResult {
   const active = items.filter((i) => !i.checked && i.deleted_at === null)
+  const bought = items
+    .filter((i) => i.checked && i.deleted_at === null)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
   const groupMap = new Map<string | null, Item[]>()
   for (const item of active) {
@@ -43,5 +51,5 @@ export function groupItems(items: Item[]): LabelGroup[] {
     groups.push({ label: label!, items: sortItems(labelItems) })
   }
 
-  return groups
+  return { groups, boughtItems: bought }
 }
