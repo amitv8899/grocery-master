@@ -48,6 +48,14 @@ export async function checkItem(id: string): Promise<void> {
   if (error) throw error
 }
 
+export async function uncheckItem(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('items')
+    .update({ checked: false })
+    .eq('id', id)
+  if (error) throw error
+}
+
 export async function deleteItem(id: string): Promise<void> {
   const { error } = await supabase
     .from('items')
