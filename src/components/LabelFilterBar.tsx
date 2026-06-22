@@ -13,8 +13,8 @@ export default function LabelFilterBar({ labels, activeLabel, onChange }: Props)
         onClick={() => onChange(null)}
         className={`flex-shrink-0 h-9 px-4 rounded-full text-sm font-medium transition-colors ${
           activeLabel === null
-            ? 'bg-gray-900 text-white'
-            : 'border border-gray-300 text-gray-700 bg-white'
+            ? 'bg-warm-text text-white'
+            : 'border border-warm-muted text-warm-sub bg-warm-card'
         }`}
       >
         All
@@ -25,8 +25,8 @@ export default function LabelFilterBar({ labels, activeLabel, onChange }: Props)
           onClick={() => onChange(label)}
           className={`flex-shrink-0 h-9 px-4 rounded-full text-sm font-medium transition-colors ${
             activeLabel === label
-              ? 'bg-gray-900 text-white'
-              : 'border border-gray-300 text-gray-700 bg-white'
+              ? 'bg-warm-text text-white'
+              : 'border border-warm-muted text-warm-sub bg-warm-card'
           }`}
         >
           {label}

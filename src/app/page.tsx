@@ -13,6 +13,7 @@ import BottomSheet from '@/components/BottomSheet'
 import TabBar from '@/components/TabBar'
 import RecipesList from '@/components/RecipesList'
 import RecipeForm from '@/components/RecipeForm'
+import LabelFilterBar from '@/components/LabelFilterBar'
 
 type Tab = 'list' | 'recipes'
 
@@ -27,6 +28,7 @@ export default function Home() {
   const [recipesError, setRecipesError] = useState<string | null>(null)
   const [recipeSheetOpen, setRecipeSheetOpen] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  const [activeLabel, setActiveLabel] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -65,6 +67,16 @@ export default function Home() {
 
   const { groups, boughtItems } = useMemo(() => groupItems(items), [items])
   const hasChecked = boughtItems.length > 0
+
+  const labelNames = useMemo(
+    () => groups.map((g) => g.label).filter((l) => l !== 'Empty label'),
+    [groups]
+  )
+
+  const visibleGroups = useMemo(
+    () => (activeLabel ? groups.filter((g) => g.label === activeLabel) : groups),
+    [groups, activeLabel]
+  )
 
   function handleAdd(item: Item) {
     setItems((prev) => [...prev, item])
@@ -223,7 +235,16 @@ export default function Home() {
             </p>
           ) : (
             <>
-              {groups.map((group) => (
+              {labelNames.length > 1 && (
+                <div className="mb-3">
+                  <LabelFilterBar
+                    labels={labelNames}
+                    activeLabel={activeLabel}
+                    onChange={setActiveLabel}
+                  />
+                </div>
+              )}
+              {visibleGroups.map((group) => (
                 <LabelGroup
                   key={group.label}
                   label={group.label}
