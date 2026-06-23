@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Item, Recipe } from '@/lib/types'
 import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
 import { fetchRecipes, deleteRecipe, addRecipeToList } from '@/lib/recipesService'
+import { upsertCatalog } from '@/lib/catalogService'
+import { getTagByName } from '@/lib/tags'
 import { groupItems } from '@/lib/groupItems'
 import AddItemForm from '@/components/AddItemForm'
 import ItemRow from '@/components/ItemRow'
@@ -69,7 +71,15 @@ export default function Home() {
   const hasChecked = boughtItems.length > 0
 
   const labelNames = useMemo(
-    () => groups.map((g) => g.label).filter((l) => l !== 'Empty label'),
+    () =>
+      groups
+        .map((g) => g.label)
+        .filter((l) => l !== 'Empty label')
+        .sort((a, b) => {
+          const aOrder = getTagByName(a)?.sortOrder ?? 999
+          const bOrder = getTagByName(b)?.sortOrder ?? 999
+          return aOrder - bOrder
+        }),
     [groups]
   )
 
@@ -123,6 +133,14 @@ export default function Home() {
       await checkItem(id)
     } catch {
       load()
+    }
+  }
+
+  async function handleTagChange(id: string, tagName: string | null) {
+    await handleUpdate(id, { label: tagName })
+    if (tagName) {
+      const item = items.find((i) => i.id === id)
+      if (item) await upsertCatalog(item.name, tagName).catch(() => {})
     }
   }
 
@@ -252,6 +270,7 @@ export default function Home() {
                   onCheck={handleCheck}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
+                  onTagChange={handleTagChange}
                 />
               ))}
               {boughtItems.length > 0 && (
@@ -266,11 +285,11 @@ export default function Home() {
                     <ItemRow
                       key={item.id}
                       item={item}
-                      labelColor={{ dot: '#aaa', bg: '#f0f0f0', text: '#888' }}
                       onCheck={() => {}}
                       onUncheck={() => handleUncheck(item.id)}
                       onUpdate={() => {}}
                       onDelete={() => handleDelete(item.id)}
+                      onTagChange={() => {}}
                     />
                   ))}
                 </div>
