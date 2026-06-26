@@ -25,10 +25,28 @@ export default function RecipeImportSheet({ existingRecipes, onImportDone, onClo
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   function handleCopyTemplate() {
-    navigator.clipboard.writeText(RECIPE_IMPORT_TEMPLATE).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(RECIPE_IMPORT_TEMPLATE).then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 1500)
+      }).catch(() => fallbackCopy())
+    } else {
+      fallbackCopy()
+    }
+  }
+
+  function fallbackCopy() {
+    const el = document.createElement('textarea')
+    el.value = RECIPE_IMPORT_TEMPLATE
+    el.style.position = 'fixed'
+    el.style.opacity = '0'
+    document.body.appendChild(el)
+    el.focus()
+    el.select()
+    document.execCommand('copy')
+    document.body.removeChild(el)
+    setCopied(true)
+    setTimeout(() => setCopied(false), 1500)
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -111,6 +129,15 @@ export default function RecipeImportSheet({ existingRecipes, onImportDone, onClo
                 {isMatch && (
                   <span className="text-xs text-warm-sub mt-0.5">↳ will merge with existing</span>
                 )}
+                <ul className="mt-1 flex flex-col gap-0.5">
+                  {r.ingredients.map((ing, j) => (
+                    <li key={j} className="text-xs text-warm-sub flex gap-1">
+                      <span>·</span>
+                      <span>{ing.name}</span>
+                      {ing.count > 1 && <span>×{ing.count}</span>}
+                    </li>
+                  ))}
+                </ul>
               </div>
             )
           })}

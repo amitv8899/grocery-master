@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
+import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,8 +20,6 @@ export const viewport: Viewport = {
   themeColor: '#ffffff',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
 }
 
 export default function RootLayout({
@@ -30,7 +29,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <ServiceWorkerRegistrar />
+        {children}
+      </body>
     </html>
   )
 }
