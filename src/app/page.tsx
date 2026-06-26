@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { Item, Recipe } from '@/lib/types'
-import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
+import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem } from '@/lib/itemsService'
 import { fetchRecipes, deleteRecipe, addRecipeToList } from '@/lib/recipesService'
 import { upsertCatalog } from '@/lib/catalogService'
 import { getTagByName } from '@/lib/tags'
@@ -68,7 +68,6 @@ export default function Home() {
   }, [])
 
   const { groups, boughtItems } = useMemo(() => groupItems(items), [items])
-  const hasChecked = boughtItems.length > 0
 
   const labelNames = useMemo(
     () =>
@@ -174,15 +173,6 @@ export default function Home() {
     }
   }
 
-  async function handleClearBought() {
-    try {
-      await clearBoughtItems()
-      setItems((prev) => prev.filter((i) => !i.checked))
-    } catch {
-      alert('Failed to clear items.')
-    }
-  }
-
   if (loading && items.length === 0) {
     return (
       <main className="flex min-h-screen items-center justify-center bg-warm-bg">
@@ -211,14 +201,6 @@ export default function Home() {
       <header className="bg-warm-card border-b border-warm-border px-5 py-3 flex items-center justify-between sticky top-0 z-10">
         <h1 className="text-lg font-medium text-warm-text">Our Groceries</h1>
         <div className="flex items-center gap-3">
-          {hasChecked && (
-            <button
-              onClick={handleClearBought}
-              className="text-xs text-warm-sub hover:text-warm-text transition-colors"
-            >
-              Clear bought
-            </button>
-          )}
           <button
             onClick={load}
             disabled={loading}

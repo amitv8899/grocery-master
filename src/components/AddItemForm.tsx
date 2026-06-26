@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { addItem } from '@/lib/itemsService'
 import { lookupCatalog, upsertCatalog } from '@/lib/catalogService'
 import { getTagColor } from '@/lib/tags'
@@ -19,6 +19,7 @@ export default function AddItemForm({ onAdd }: Props) {
   const [tagPickerOpen, setTagPickerOpen] = useState(false)
   const [nameError, setNameError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const submittedRef = useRef(false)
 
   const tagColor = getTagColor(tag)
 
@@ -34,17 +35,20 @@ export default function AddItemForm({ onAdd }: Props) {
 
   async function handleNameBlur() {
     if (!name.trim()) return
+    submittedRef.current = false
     try {
       const remembered = await lookupCatalog(name.trim())
-      if (remembered && !tag) setTag(remembered)
+      if (remembered && !tag && !submittedRef.current) setTag(remembered)
     } catch {
       // catalog lookup is non-critical — ignore errors
     }
   }
 
   async function submitItem() {
+    submittedRef.current = true
     setSubmitting(true)
     try {
+      const userChoseTag = tag !== null
       let resolvedTag = tag
       if (!resolvedTag && name.trim()) {
         resolvedTag = await lookupCatalog(name.trim()).catch(() => null)
@@ -55,7 +59,7 @@ export default function AddItemForm({ onAdd }: Props) {
         priority,
         label: resolvedTag,
       })
-      if (resolvedTag) await upsertCatalog(name.trim(), resolvedTag).catch(() => {})
+      if (resolvedTag && userChoseTag) await upsertCatalog(name.trim(), resolvedTag).catch(() => {})
       onAdd(item)
       setName('')
       setCount(1)

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import type { Recipe, Ingredient, Priority } from '@/lib/types'
 import { addRecipe } from '@/lib/recipesService'
+import { TAGS } from '@/lib/tags'
 
 type Props = {
   onAdd: (recipe: Recipe) => void
@@ -112,13 +113,16 @@ export default function RecipeForm({ onAdd }: Props) {
               <option value="normal">#2 Normal</option>
               <option value="low">#3 Low</option>
             </select>
-            <input
-              type="text"
+            <select
               value={ing.label ?? ''}
-              onChange={(e) => updateIngredientField(idx, 'label', e.target.value)}
-              placeholder="Label"
-              className="w-20 h-9 px-2 bg-warm-bg border border-warm-muted rounded-lg text-xs text-warm-text placeholder:text-warm-fade focus:outline-none focus:ring-2 focus:ring-accent-green"
-            />
+              onChange={(e) => updateIngredientField(idx, 'label', e.target.value || null)}
+              className="w-24 h-9 px-1 bg-warm-bg border border-warm-muted rounded-lg text-xs text-warm-text focus:outline-none focus:ring-2 focus:ring-accent-green"
+            >
+              <option value="">Category</option>
+              {TAGS.map((t) => (
+                <option key={t.name} value={t.name}>{t.name}</option>
+              ))}
+            </select>
             <button
               type="button"
               onClick={() => removeIngredientRow(idx)}
