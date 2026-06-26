@@ -17,6 +17,7 @@ import TabBar from '@/components/TabBar'
 import RecipesList from '@/components/RecipesList'
 import RecipeForm from '@/components/RecipeForm'
 import RecipeImportSheet from '@/components/RecipeImportSheet'
+import RecipeEditOverlay from '@/components/RecipeEditOverlay'
 import LabelFilterBar from '@/components/LabelFilterBar'
 
 type Tab = 'list' | 'recipes'
@@ -31,6 +32,7 @@ export default function Home() {
   const [recipesLoading, setRecipesLoading] = useState(true)
   const [recipesError, setRecipesError] = useState<string | null>(null)
   const [recipeSheetMode, setRecipeSheetMode] = useState<'manual' | 'json' | null>(null)
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [activeLabel, setActiveLabel] = useState<string | null>(null)
 
@@ -299,7 +301,7 @@ export default function Home() {
             recipes={recipes}
             loading={recipesLoading}
             error={recipesError}
-            onUpdate={handleRecipeUpdate}
+            onEdit={(recipe) => setEditingRecipe(recipe)}
             onDelete={handleRecipeDelete}
             onAddToList={handleAddToList}
             onRetry={loadRecipes}
@@ -348,6 +350,18 @@ export default function Home() {
 
       {/* Tab bar */}
       <TabBar activeTab={activeTab} onTabChange={setActiveTab} />
+
+      {/* Recipe edit overlay */}
+      {editingRecipe && (
+        <RecipeEditOverlay
+          recipe={editingRecipe}
+          onSave={(updated) => {
+            handleRecipeUpdate(updated)
+            setEditingRecipe(null)
+          }}
+          onClose={() => setEditingRecipe(null)}
+        />
+      )}
     </main>
   )
 }

@@ -100,7 +100,7 @@ export async function addRecipeToList(recipe: Recipe, currentItems: Item[]): Pro
         i.name.trim().toLowerCase() === ingredient.name.trim().toLowerCase()
     )
     if (candidate) {
-      const updated = await updateItem(candidate.id, { count: ingredient.count, checked: false })
+      const updated = await updateItem(candidate.id, { count: (candidate.count || 0) + ingredient.count, checked: false })
       results.push(updated)
     } else {
       const inserted = await addItem({

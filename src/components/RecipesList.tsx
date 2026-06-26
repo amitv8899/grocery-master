@@ -7,7 +7,7 @@ type Props = {
   recipes: Recipe[]
   loading: boolean
   error: string | null
-  onUpdate: (recipe: Recipe) => void
+  onEdit: (recipe: Recipe) => void
   onDelete: (id: string) => void
   onAddToList: (recipe: Recipe) => Promise<void>
   onRetry: () => void
@@ -17,7 +17,7 @@ export default function RecipesList({
   recipes,
   loading,
   error,
-  onUpdate,
+  onEdit,
   onDelete,
   onAddToList,
   onRetry,
@@ -54,7 +54,7 @@ export default function RecipesList({
         <RecipeCard
           key={recipe.id}
           recipe={recipe}
-          onUpdate={onUpdate}
+          onEdit={() => onEdit(recipe)}
           onDelete={() => onDelete(recipe.id)}
           onAddToList={() => onAddToList(recipe)}
         />

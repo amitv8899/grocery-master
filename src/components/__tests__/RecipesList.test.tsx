@@ -13,7 +13,7 @@ const baseProps = {
   recipes: [],
   loading: false,
   error: null,
-  onUpdate: jest.fn(),
+  onEdit: jest.fn(),
   onDelete: jest.fn(),
   onAddToList: noop,
   onRetry: jest.fn(),
