@@ -2,8 +2,10 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { Item, Recipe } from '@/lib/types'
-import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
+import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem } from '@/lib/itemsService'
 import { fetchRecipes, deleteRecipe, addRecipeToList } from '@/lib/recipesService'
+import { upsertCatalog } from '@/lib/catalogService'
+import { getTagByName } from '@/lib/tags'
 import { groupItems } from '@/lib/groupItems'
 import AddItemForm from '@/components/AddItemForm'
 import ItemRow from '@/components/ItemRow'
@@ -66,10 +68,17 @@ export default function Home() {
   }, [])
 
   const { groups, boughtItems } = useMemo(() => groupItems(items), [items])
-  const hasChecked = boughtItems.length > 0
 
   const labelNames = useMemo(
-    () => groups.map((g) => g.label).filter((l) => l !== 'Empty label'),
+    () =>
+      groups
+        .map((g) => g.label)
+        .filter((l) => l !== 'Empty label')
+        .sort((a, b) => {
+          const aOrder = getTagByName(a)?.sortOrder ?? 999
+          const bOrder = getTagByName(b)?.sortOrder ?? 999
+          return aOrder - bOrder
+        }),
     [groups]
   )
 
@@ -126,6 +135,14 @@ export default function Home() {
     }
   }
 
+  async function handleTagChange(id: string, tagName: string | null) {
+    await handleUpdate(id, { label: tagName })
+    if (tagName) {
+      const item = items.find((i) => i.id === id)
+      if (item) await upsertCatalog(item.name, tagName).catch(() => {})
+    }
+  }
+
   async function handleUpdate(id: string, data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label'>>) {
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, ...data } : i))
@@ -153,15 +170,6 @@ export default function Home() {
       await uncheckItem(id)
     } catch {
       load()
-    }
-  }
-
-  async function handleClearBought() {
-    try {
-      await clearBoughtItems()
-      setItems((prev) => prev.filter((i) => !i.checked))
-    } catch {
-      alert('Failed to clear items.')
     }
   }
 
@@ -193,14 +201,6 @@ export default function Home() {
       <header className="bg-warm-card border-b border-warm-border px-5 py-3 flex items-center justify-between sticky top-0 z-10">
         <h1 className="text-lg font-medium text-warm-text">Our Groceries</h1>
         <div className="flex items-center gap-3">
-          {hasChecked && (
-            <button
-              onClick={handleClearBought}
-              className="text-xs text-warm-sub hover:text-warm-text transition-colors"
-            >
-              Clear bought
-            </button>
-          )}
           <button
             onClick={load}
             disabled={loading}
@@ -252,6 +252,7 @@ export default function Home() {
                   onCheck={handleCheck}
                   onUpdate={handleUpdate}
                   onDelete={handleDelete}
+                  onTagChange={handleTagChange}
                 />
               ))}
               {boughtItems.length > 0 && (
@@ -266,11 +267,11 @@ export default function Home() {
                     <ItemRow
                       key={item.id}
                       item={item}
-                      labelColor={{ dot: '#aaa', bg: '#f0f0f0', text: '#888' }}
                       onCheck={() => {}}
                       onUncheck={() => handleUncheck(item.id)}
                       onUpdate={() => {}}
                       onDelete={() => handleDelete(item.id)}
+                      onTagChange={() => {}}
                     />
                   ))}
                 </div>

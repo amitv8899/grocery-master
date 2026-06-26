@@ -1,4 +1,5 @@
 import type { Item } from './types'
+import { getTagByName } from './tags'
 
 const PRIORITY_ORDER = { high: 0, normal: 1, low: 2 } as const
 
@@ -34,21 +35,25 @@ export function groupItems(items: Item[]): GroupItemsResult {
 
   const groups: LabelGroup[] = []
 
-  // "Empty label" group first
-  if (groupMap.has(null)) {
-    groups.push({ label: 'Empty label', items: sortItems(groupMap.get(null)!) })
-    groupMap.delete(null)
+  const nullItems = groupMap.get(null)
+  groupMap.delete(null)
+
+  const labelEntries = Array.from(groupMap.entries()) as [string, Item[]][]
+
+  const knownGroups = labelEntries
+    .filter(([label]) => getTagByName(label) !== null)
+    .sort(([a], [b]) => getTagByName(a)!.sortOrder - getTagByName(b)!.sortOrder)
+
+  const unknownGroups = labelEntries
+    .filter(([label]) => getTagByName(label) === null)
+    .sort(([a], [b]) => a.localeCompare(b))
+
+  for (const [label, labelItems] of [...knownGroups, ...unknownGroups]) {
+    groups.push({ label, items: sortItems(labelItems) })
   }
 
-  // Remaining labels ordered by their first item's created_at
-  const labelEntries = Array.from(groupMap.entries()).sort(([, aItems], [, bItems]) => {
-    const aFirst = Math.min(...aItems.map((i) => new Date(i.created_at).getTime()))
-    const bFirst = Math.min(...bItems.map((i) => new Date(i.created_at).getTime()))
-    return aFirst - bFirst
-  })
-
-  for (const [label, labelItems] of labelEntries) {
-    groups.push({ label: label!, items: sortItems(labelItems) })
+  if (nullItems) {
+    groups.push({ label: 'Empty label', items: sortItems(nullItems) })
   }
 
   return { groups, boughtItems: bought }

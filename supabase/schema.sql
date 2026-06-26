@@ -29,13 +29,25 @@ CREATE TABLE IF NOT EXISTS public.recipes (
 );
 
 -- ============================================================
+-- item_catalog — remembers last tag used per item name
+-- ============================================================
+CREATE TABLE IF NOT EXISTS public.item_catalog (
+  id         UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
+  name       TEXT        NOT NULL UNIQUE,
+  tag_name   TEXT,
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+-- ============================================================
 -- Row Level Security — fully open (anon read/write)
 -- ============================================================
-ALTER TABLE public.items   ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.recipes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.items        ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.recipes      ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.item_catalog ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "public_all_items"   ON public.items   FOR ALL TO anon USING (true) WITH CHECK (true);
-CREATE POLICY "public_all_recipes" ON public.recipes FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "public_all_items"    ON public.items        FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "public_all_recipes"  ON public.recipes      FOR ALL TO anon USING (true) WITH CHECK (true);
+CREATE POLICY "public_all_catalog"  ON public.item_catalog FOR ALL TO anon USING (true) WITH CHECK (true);
 
 -- ============================================================
 -- Realtime — items only

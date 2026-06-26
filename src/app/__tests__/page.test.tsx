@@ -1,14 +1,18 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor, act } from '@testing-library/react'
 import Home from '../page'
 import * as itemsService from '@/lib/itemsService'
+import * as recipesService from '@/lib/recipesService'
+import * as catalogService from '@/lib/catalogService'
 import type { Item } from '@/lib/types'
 
 jest.mock('@/lib/itemsService')
+jest.mock('@/lib/recipesService')
+jest.mock('@/lib/catalogService')
 
 const mockFetchItems = itemsService.fetchItems as jest.Mock
-const mockClearBoughtItems = itemsService.clearBoughtItems as jest.Mock
-const mockCheckItem = itemsService.checkItem as jest.Mock
+const mockFetchRecipes = recipesService.fetchRecipes as jest.Mock
+const mockLookupCatalog = catalogService.lookupCatalog as jest.Mock
 
 function makeItem(overrides: Partial<Item> = {}): Item {
   return {
@@ -24,48 +28,56 @@ function makeItem(overrides: Partial<Item> = {}): Item {
   }
 }
 
-beforeEach(() => jest.clearAllMocks())
+beforeEach(() => {
+  jest.clearAllMocks()
+  mockFetchRecipes.mockResolvedValue([])
+  mockLookupCatalog.mockResolvedValue(null)
+})
 
 describe('page.tsx', () => {
-  it('clear button disabled when no checked items', async () => {
-    const items = [makeItem({ checked: false })]
-    mockFetchItems.mockResolvedValue(items)
+  it('renders empty state when no items', async () => {
+    mockFetchItems.mockResolvedValue([])
 
     await act(async () => {
       render(<Home />)
     })
 
-    const clearBtn = screen.getByRole('button', { name: /clear all bought/i })
-    expect(clearBtn).toBeDisabled()
+    expect(screen.getByText(/no items yet/i)).toBeInTheDocument()
   })
 
-  it('activeLabel auto-resets after clearing all items in that label', async () => {
-    const produceItem = makeItem({ id: 'p1', label: 'Produce', checked: false })
-    const dairyItem = makeItem({ id: 'd1', label: 'Dairy', checked: false })
-    mockFetchItems.mockResolvedValue([produceItem, dairyItem])
-    mockCheckItem.mockResolvedValue(undefined)
-    mockClearBoughtItems.mockResolvedValue(undefined)
+  it('renders items after load', async () => {
+    mockFetchItems.mockResolvedValue([makeItem({ name: 'Apples' })])
 
     await act(async () => {
       render(<Home />)
     })
 
-    // Click "Produce" filter pill
-    fireEvent.click(screen.getByRole('button', { name: 'Produce' }))
+    expect(screen.getByText('Apples')).toBeInTheDocument()
+  })
 
-    // Check the produce item off
+  it('shows error state on fetch failure', async () => {
+    mockFetchItems.mockRejectedValue(new Error('network error'))
+
     await act(async () => {
-      fireEvent.click(screen.getAllByRole('checkbox')[0])
+      render(<Home />)
     })
 
-    // Clear bought — produce item was checked, dairy was not
-    await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: /clear all bought/i }))
-    })
-
-    // "Produce" label no longer exists — activeLabel should reset, dairy visible
     await waitFor(() => {
-      expect(screen.queryByText('item')).toBeInTheDocument() // dairy item still shown
+      expect(screen.getByText(/failed to load/i)).toBeInTheDocument()
     })
+  })
+
+  it('label filter bar appears when 2+ distinct labels present', async () => {
+    mockFetchItems.mockResolvedValue([
+      makeItem({ label: 'Produce' }),
+      makeItem({ label: 'Dairy' }),
+    ])
+
+    await act(async () => {
+      render(<Home />)
+    })
+
+    expect(screen.getAllByText('Produce').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Dairy').length).toBeGreaterThan(0)
   })
 })

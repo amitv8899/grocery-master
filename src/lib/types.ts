@@ -46,6 +46,12 @@ export type Database = {
         }
         Relationships: []
       }
+      item_catalog: {
+        Row: { id: string; name: string; tag_name: string | null; updated_at: string }
+        Insert: { id?: string; name: string; tag_name?: string | null; updated_at?: string }
+        Update: { id?: string; name?: string; tag_name?: string | null; updated_at?: string }
+        Relationships: []
+      }
       recipes: {
         Row: {
           id: string
@@ -72,6 +78,13 @@ export type Database = {
       }
     }
   }
+}
+
+export type ItemCatalog = {
+  id: string
+  name: string
+  tag_name: string | null
+  updated_at: string
 }
 
 export type Item = Database['public']['Tables']['items']['Row']

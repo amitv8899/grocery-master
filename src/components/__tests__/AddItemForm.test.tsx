@@ -1,12 +1,18 @@
+'use client'
+
 import React from 'react'
 import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import AddItemForm from '../AddItemForm'
 import * as itemsService from '@/lib/itemsService'
+import * as catalogService from '@/lib/catalogService'
 import type { Item } from '@/lib/types'
 
 jest.mock('@/lib/itemsService')
+jest.mock('@/lib/catalogService')
 
 const mockAddItem = itemsService.addItem as jest.Mock
+const mockLookupCatalog = catalogService.lookupCatalog as jest.Mock
+const mockUpsertCatalog = catalogService.upsertCatalog as jest.Mock
 
 const fakeItem: Item = {
   id: '1',
@@ -20,21 +26,16 @@ const fakeItem: Item = {
 }
 
 describe('AddItemForm', () => {
-  beforeEach(() => jest.clearAllMocks())
+  beforeEach(() => {
+    jest.clearAllMocks()
+    mockLookupCatalog.mockResolvedValue(null)
+    mockUpsertCatalog.mockResolvedValue(undefined)
+  })
 
   it('empty name → shows validation error; addItem NOT called', () => {
     render(<AddItemForm onAdd={jest.fn()} />)
-    fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    fireEvent.click(screen.getByRole('button', { name: /add to list/i }))
     expect(screen.getByText('Name is required')).toBeInTheDocument()
-    expect(mockAddItem).not.toHaveBeenCalled()
-  })
-
-  it('count < 1 → shows validation error; addItem NOT called', () => {
-    render(<AddItemForm onAdd={jest.fn()} />)
-    fireEvent.change(screen.getByPlaceholderText('Item name *'), { target: { value: 'Eggs' } })
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '0' } })
-    fireEvent.click(screen.getByRole('button', { name: /add/i }))
-    expect(screen.getByText('Count must be a positive integer')).toBeInTheDocument()
     expect(mockAddItem).not.toHaveBeenCalled()
   })
 
@@ -43,20 +44,19 @@ describe('AddItemForm', () => {
     const onAdd = jest.fn()
     render(<AddItemForm onAdd={onAdd} />)
 
-    fireEvent.change(screen.getByPlaceholderText('Item name *'), { target: { value: 'Milk' } })
-    fireEvent.change(screen.getByRole('spinbutton'), { target: { value: '2' } })
-    fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    fireEvent.change(screen.getByPlaceholderText('e.g. Chicken breast'), { target: { value: 'Milk' } })
+    fireEvent.click(screen.getByRole('button', { name: /add to list/i }))
 
     await waitFor(() => expect(onAdd).toHaveBeenCalledWith(fakeItem))
-    expect(mockAddItem).toHaveBeenCalledWith(expect.objectContaining({ name: 'Milk', count: 2 }))
+    expect(mockAddItem).toHaveBeenCalledWith(expect.objectContaining({ name: 'Milk' }))
   })
 
-  it('blank label → addItem called with label: null', async () => {
+  it('no tag selected → addItem called with label: null', async () => {
     mockAddItem.mockResolvedValue(fakeItem)
     render(<AddItemForm onAdd={jest.fn()} />)
 
-    fireEvent.change(screen.getByPlaceholderText('Item name *'), { target: { value: 'Bread' } })
-    fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    fireEvent.change(screen.getByPlaceholderText('e.g. Chicken breast'), { target: { value: 'Bread' } })
+    fireEvent.click(screen.getByRole('button', { name: /add to list/i }))
 
     await waitFor(() => expect(mockAddItem).toHaveBeenCalled())
     expect(mockAddItem).toHaveBeenCalledWith(expect.objectContaining({ label: null }))
@@ -66,10 +66,22 @@ describe('AddItemForm', () => {
     mockAddItem.mockResolvedValue(fakeItem)
     render(<AddItemForm onAdd={jest.fn()} />)
 
-    const nameInput = screen.getByPlaceholderText('Item name *') as HTMLInputElement
+    const nameInput = screen.getByPlaceholderText('e.g. Chicken breast') as HTMLInputElement
     fireEvent.change(nameInput, { target: { value: 'Butter' } })
-    fireEvent.click(screen.getByRole('button', { name: /add/i }))
+    fireEvent.click(screen.getByRole('button', { name: /add to list/i }))
 
     await waitFor(() => expect(nameInput.value).toBe(''))
+  })
+
+  it('catalog lookup pre-fills tag on name blur', async () => {
+    mockLookupCatalog.mockResolvedValue('Dairy')
+    mockAddItem.mockResolvedValue(fakeItem)
+    render(<AddItemForm onAdd={jest.fn()} />)
+
+    const nameInput = screen.getByPlaceholderText('e.g. Chicken breast')
+    fireEvent.change(nameInput, { target: { value: 'Milk' } })
+    fireEvent.blur(nameInput)
+
+    await waitFor(() => expect(screen.getByText('Dairy')).toBeInTheDocument())
   })
 })
