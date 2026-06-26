@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import type { Item, Recipe } from '@/lib/types'
+import type { Item, Recipe, ImportResult } from '@/lib/types'
 import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem } from '@/lib/itemsService'
 import { fetchRecipes, deleteRecipe, addRecipeToList } from '@/lib/recipesService'
 import { upsertCatalog } from '@/lib/catalogService'
@@ -11,10 +11,12 @@ import AddItemForm from '@/components/AddItemForm'
 import ItemRow from '@/components/ItemRow'
 import LabelGroup from '@/components/LabelGroup'
 import FAB from '@/components/FAB'
+import FABSpeedDial from '@/components/FABSpeedDial'
 import BottomSheet from '@/components/BottomSheet'
 import TabBar from '@/components/TabBar'
 import RecipesList from '@/components/RecipesList'
 import RecipeForm from '@/components/RecipeForm'
+import RecipeImportSheet from '@/components/RecipeImportSheet'
 import LabelFilterBar from '@/components/LabelFilterBar'
 
 type Tab = 'list' | 'recipes'
@@ -28,7 +30,7 @@ export default function Home() {
   const [recipes, setRecipes] = useState<Recipe[]>([])
   const [recipesLoading, setRecipesLoading] = useState(true)
   const [recipesError, setRecipesError] = useState<string | null>(null)
-  const [recipeSheetOpen, setRecipeSheetOpen] = useState(false)
+  const [recipeSheetMode, setRecipeSheetMode] = useState<'manual' | 'json' | null>(null)
   const [toast, setToast] = useState<string | null>(null)
   const [activeLabel, setActiveLabel] = useState<string | null>(null)
 
@@ -94,7 +96,21 @@ export default function Home() {
 
   function handleRecipeAdd(recipe: Recipe) {
     setRecipes((prev) => [...prev, recipe])
-    setRecipeSheetOpen(false)
+    setRecipeSheetMode(null)
+  }
+
+  function handleImportDone(result: ImportResult) {
+    setRecipes((prev) => {
+      const map = new Map(prev.map((r) => [r.id, r]))
+      ;[...result.imported, ...result.merged].forEach((r) => map.set(r.id, r))
+      return Array.from(map.values())
+    })
+    setRecipeSheetMode(null)
+    const parts: string[] = []
+    if (result.imported.length) parts.push(`${result.imported.length} added`)
+    if (result.merged.length) parts.push(`${result.merged.length} merged`)
+    if (result.failed.length) parts.push(`${result.failed.length} failed`)
+    showToast(parts.join(', '))
   }
 
   function handleRecipeUpdate(updated: Recipe) {
@@ -299,16 +315,35 @@ export default function Home() {
       )}
 
       {/* FAB */}
-      <FAB onClick={() => activeTab === 'list' ? setSheetOpen(true) : setRecipeSheetOpen(true)} />
+      {activeTab === 'list' ? (
+        <FAB onClick={() => setSheetOpen(true)} />
+      ) : (
+        <FABSpeedDial
+          onManual={() => setRecipeSheetMode('manual')}
+          onImportJSON={() => setRecipeSheetMode('json')}
+        />
+      )}
 
       {/* Add item sheet */}
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
         <AddItemForm onAdd={handleAdd} />
       </BottomSheet>
 
-      {/* Add recipe sheet */}
-      <BottomSheet open={recipeSheetOpen} onClose={() => setRecipeSheetOpen(false)}>
-        <RecipeForm onAdd={handleRecipeAdd} />
+      {/* Manual recipe sheet */}
+      <BottomSheet open={recipeSheetMode === 'manual'} onClose={() => setRecipeSheetMode(null)}>
+        <RecipeForm onAdd={(r) => { handleRecipeAdd(r); setRecipeSheetMode(null) }} />
+      </BottomSheet>
+
+      {/* JSON import sheet */}
+      <BottomSheet
+        open={recipeSheetMode === 'json'}
+        onClose={() => setRecipeSheetMode(null)}
+      >
+        <RecipeImportSheet
+          existingRecipes={recipes}
+          onImportDone={handleImportDone}
+          onClose={() => setRecipeSheetMode(null)}
+        />
       </BottomSheet>
 
       {/* Tab bar */}

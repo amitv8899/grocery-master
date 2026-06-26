@@ -94,3 +94,25 @@ export type ItemUpdate = Database['public']['Tables']['items']['Update']
 export type Recipe = Database['public']['Tables']['recipes']['Row']
 export type RecipeInsert = Database['public']['Tables']['recipes']['Insert']
 export type RecipeUpdate = Database['public']['Tables']['recipes']['Update']
+
+export type RecipeImport = {
+  name: string
+  ingredients: Ingredient[]
+}
+
+export type ValidationError = {
+  recipeIndex: number
+  ingredientIndex?: number
+  message: string
+}
+
+export type ValidationResult = {
+  recipes: RecipeImport[]
+  errors: ValidationError[]
+}
+
+export type ImportResult = {
+  imported: Recipe[]
+  merged: Recipe[]
+  failed: { index: number; name: string; error: string }[]
+}
