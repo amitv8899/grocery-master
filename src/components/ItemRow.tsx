@@ -16,9 +16,9 @@ type Props = {
 }
 
 const priorityRank: Record<Priority, string> = {
-  high: '#1',
-  normal: '#2',
-  low: '#3',
+  high: 'High',
+  normal: 'Normal',
+  low: 'Low',
 }
 
 export default function ItemRow({ item, onCheck, onUncheck, onUpdate, onDelete, onTagChange }: Props) {

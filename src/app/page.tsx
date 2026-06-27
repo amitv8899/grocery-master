@@ -18,6 +18,7 @@ import RecipesList from '@/components/RecipesList'
 import RecipeForm from '@/components/RecipeForm'
 import RecipeImportSheet from '@/components/RecipeImportSheet'
 import RecipeEditOverlay from '@/components/RecipeEditOverlay'
+import RecipeCreateOverlay from '@/components/RecipeCreateOverlay'
 import LabelFilterBar from '@/components/LabelFilterBar'
 
 type Tab = 'list' | 'recipes'
@@ -331,10 +332,13 @@ export default function Home() {
         <AddItemForm onAdd={handleAdd} />
       </BottomSheet>
 
-      {/* Manual recipe sheet */}
-      <BottomSheet open={recipeSheetMode === 'manual'} onClose={() => setRecipeSheetMode(null)}>
-        <RecipeForm onAdd={(r) => { handleRecipeAdd(r); setRecipeSheetMode(null) }} />
-      </BottomSheet>
+      {/* Manual recipe overlay */}
+      {recipeSheetMode === 'manual' && (
+        <RecipeCreateOverlay
+          onAdd={(r) => { handleRecipeAdd(r); setRecipeSheetMode(null) }}
+          onClose={() => setRecipeSheetMode(null)}
+        />
+      )}
 
       {/* JSON import sheet */}
       <BottomSheet
