@@ -26,7 +26,7 @@ export default function BottomSheet({ open, onClose, children }: Props) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/30 z-20 flex items-end overflow-hidden"
+      className="fixed inset-0 bg-black/30 z-50 flex items-end overflow-hidden"
       onClick={onClose}
     >
       <div
