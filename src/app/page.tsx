@@ -15,7 +15,6 @@ import FABSpeedDial from '@/components/FABSpeedDial'
 import BottomSheet from '@/components/BottomSheet'
 import TabBar from '@/components/TabBar'
 import RecipesList from '@/components/RecipesList'
-import RecipeForm from '@/components/RecipeForm'
 import RecipeImportSheet from '@/components/RecipeImportSheet'
 import RecipeEditOverlay from '@/components/RecipeEditOverlay'
 import RecipeCreateOverlay from '@/components/RecipeCreateOverlay'
@@ -312,7 +311,7 @@ export default function Home() {
 
       {/* Toast */}
       {toast && (
-        <div className="fixed bottom-[88px] left-4 right-4 z-30 bg-warm-text text-white text-sm text-center py-3 rounded-xl shadow-lg pointer-events-none">
+        <div className="fixed bottom-[88px] left-4 right-4 z-[60] bg-warm-text text-white text-sm text-center py-3 rounded-xl shadow-lg pointer-events-none">
           {toast}
         </div>
       )}
