@@ -6,18 +6,21 @@ import ServiceWorkerRegistrar from '@/components/ServiceWorkerRegistrar'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'Grocery Master',
+  title: 'Our Groceries',
   description: 'Shared grocery list',
   manifest: '/manifest.webmanifest',
+  icons: {
+    apple: '/icons/apple-touch-icon.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'default',
-    title: 'Grocery Master',
+    title: 'Our Groceries',
   },
 }
 
 export const viewport: Viewport = {
-  themeColor: '#ffffff',
+  themeColor: '#F1EFE8',
   width: 'device-width',
   initialScale: 1,
 }
