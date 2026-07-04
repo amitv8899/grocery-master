@@ -21,3 +21,11 @@ body {
 
 .no-scrollbar::-webkit-scrollbar { display: none; }
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* iOS Safari auto-zooms on focus when an input's font-size is below 16px.
+   !important needed to outrank Tailwind text-size utility classes (e.g. text-sm). */
+input,
+select,
+textarea {
+  font-size: 16px !important;
+}
