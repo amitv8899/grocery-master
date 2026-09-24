@@ -67,7 +67,7 @@ describe('addItem', () => {
 
     const payload = { name: 'Milk', count: 2, priority: 'normal' as const, label: null }
     await addItem(payload).catch(() => {})
-    expect(chain.insert).toHaveBeenCalledWith({ unit: 'count', ...payload })
+    expect(chain.insert).toHaveBeenCalledWith({ unit: 'count', from_recipe: false, ...payload })
   })
 
   it('defaults unit to "count" unless one is passed', async () => {
@@ -80,6 +80,19 @@ describe('addItem', () => {
     await addItem({ name: 'Milk', count: 2, unit: 'l', priority: 'normal', label: null }).catch(() => {})
     expect(chain.insert).toHaveBeenCalledWith(
       expect.objectContaining({ unit: 'l' })
+    )
+  })
+
+  it('defaults from_recipe to false unless one is passed', async () => {
+    const chain = setupChain({ data: { id: '1' }, error: null })
+    chain.single = jest.fn(() => Promise.resolve({ data: { id: '1' }, error: null }))
+    chain.select = jest.fn(() => chain)
+    chain.insert = jest.fn(() => chain)
+    mockFrom.mockReturnValue(chain)
+
+    await addItem({ name: 'Milk', count: 2, priority: 'normal', label: null, from_recipe: true }).catch(() => {})
+    expect(chain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ from_recipe: true })
     )
   })
 

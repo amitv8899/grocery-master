@@ -17,10 +17,11 @@ export async function addItem(data: {
   unit?: Unit
   priority: Priority
   label: string | null
+  from_recipe?: boolean
 }): Promise<Item> {
   const { data: item, error } = await supabase
     .from('items')
-    .insert({ unit: 'count', ...data })
+    .insert({ unit: 'count', from_recipe: false, ...data })
     .select()
     .single()
   if (error) throw error

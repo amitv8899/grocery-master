@@ -197,8 +197,9 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
       setSelectedExisting(null)
       setSuggestions([])
       setShowSuggestions(false)
-    } catch {
-      setNameError('Failed to add item. Try again.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : ''
+      setNameError(detail ? `Failed to add item: ${detail}` : 'Failed to add item. Try again.')
     } finally {
       setSubmitting(false)
     }

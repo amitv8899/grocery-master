@@ -11,6 +11,7 @@ const baseItem: Item = {
   priority: 'normal',
   checked: false,
   label: 'Produce',
+  from_recipe: false,
   deleted_at: null,
   created_at: new Date().toISOString(),
 }

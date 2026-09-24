@@ -144,12 +144,23 @@ export default function Home() {
       const n = recipe.ingredients.length
       showToast(`Added ${n} ingredient${n === 1 ? '' : 's'}`)
       setActiveTab('list')
-    } catch {
-      showToast('Failed to add to list.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : ''
+      showToast(detail ? `Failed to add to list: ${detail}` : 'Failed to add to list.')
     }
   }
 
   async function handleCheck(id: string) {
+    const item = items.find((i) => i.id === id)
+    if (item?.from_recipe) {
+      setItems((prev) => prev.filter((i) => i.id !== id))
+      try {
+        await deleteItem(id)
+      } catch {
+        load()
+      }
+      return
+    }
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, checked: true } : i)))
     try {
       await checkItem(id)
