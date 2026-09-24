@@ -2,9 +2,10 @@
 
 import { useState } from 'react'
 import { IconChevronLeft, IconTrash } from '@tabler/icons-react'
-import type { Recipe, Ingredient, Priority } from '@/lib/types'
+import type { Recipe, Ingredient, Priority, Unit } from '@/lib/types'
 import { updateRecipe } from '@/lib/recipesService'
 import { TAGS } from '@/lib/tags'
+import { UNITS, getUnit } from '@/lib/units'
 
 type Props = {
   recipe: Recipe
@@ -19,7 +20,7 @@ export default function RecipeEditOverlay({ recipe, onSave, onClose }: Props) {
   const [saving, setSaving] = useState(false)
 
   function addRow() {
-    setEditIngredients((prev) => [...prev, { name: '', count: 1, priority: 'normal', label: '' }])
+    setEditIngredients((prev) => [...prev, { name: '', count: 1, unit: 'count', priority: 'normal', label: '' }])
   }
 
   function removeRow(idx: number) {
@@ -30,12 +31,18 @@ export default function RecipeEditOverlay({ recipe, onSave, onClose }: Props) {
     setEditIngredients((prev) => prev.map((ing, i) => (i === idx ? { ...ing, [field]: value } : ing)))
   }
 
+  function handleUnitChange(idx: number, unit: Unit) {
+    setEditIngredients((prev) =>
+      prev.map((ing, i) => (i === idx ? { ...ing, unit, count: getUnit(unit).step } : ing))
+    )
+  }
+
   async function handleSave() {
     setError('')
     if (!editName.trim()) { setError('Recipe name is required'); return }
     if (editIngredients.length === 0) { setError('At least one ingredient is required'); return }
-    const invalid = editIngredients.find((i) => !i.name.trim() || i.count < 1)
-    if (invalid) { setError('Each ingredient needs a name and count ≥ 1'); return }
+    const invalid = editIngredients.find((i) => !i.name.trim() || i.count <= 0)
+    if (invalid) { setError('Each ingredient needs a name and count > 0'); return }
     setSaving(true)
     try {
       const updated = await updateRecipe(recipe.id, {
@@ -114,15 +121,30 @@ export default function RecipeEditOverlay({ recipe, onSave, onClose }: Props) {
                     <IconTrash size={16} />
                   </button>
                 </div>
-                {/* Count + Priority row */}
+                {/* Count + Unit + Priority row */}
                 <div className="flex gap-2">
                   <input
                     type="number"
-                    min="1"
+                    min={0}
+                    step={ing.unit === 'count' ? 1 : 'any'}
                     value={ing.count}
-                    onChange={(e) => updateField(idx, 'count', Math.max(1, parseInt(e.target.value) || 1))}
-                    className="w-20 h-9 px-2 bg-warm-bg border border-warm-muted rounded-lg text-sm text-warm-text text-center focus:outline-none focus:ring-2 focus:ring-accent-green"
+                    onChange={(e) => {
+                      const min = ing.unit === 'count' ? 1 : 0.01
+                      const parsed = ing.unit === 'count' ? parseInt(e.target.value, 10) : parseFloat(e.target.value)
+                      updateField(idx, 'count', Math.max(min, Number.isNaN(parsed) ? min : parsed))
+                    }}
+                    className="w-16 h-9 px-2 bg-warm-bg border border-warm-muted rounded-lg text-sm text-warm-text text-center focus:outline-none focus:ring-2 focus:ring-accent-green"
                   />
+                  <select
+                    value={ing.unit ?? 'count'}
+                    onChange={(e) => handleUnitChange(idx, e.target.value as Unit)}
+                    aria-label="Unit"
+                    className="w-[70px] h-9 px-1 bg-warm-bg border border-warm-muted rounded-lg text-sm text-warm-text focus:outline-none focus:ring-2 focus:ring-accent-green"
+                  >
+                    {UNITS.map((u) => (
+                      <option key={u.value} value={u.value}>{u.label}</option>
+                    ))}
+                  </select>
                   <select
                     value={ing.priority}
                     onChange={(e) => updateField(idx, 'priority', e.target.value as Priority)}
