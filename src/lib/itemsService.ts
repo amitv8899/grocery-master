@@ -1,5 +1,5 @@
 import { supabase } from './supabaseClient'
-import type { Item, Priority } from './types'
+import type { Item, Priority, Unit } from './types'
 
 export async function fetchItems(): Promise<Item[]> {
   const { data, error } = await supabase
@@ -14,12 +14,13 @@ export async function fetchItems(): Promise<Item[]> {
 export async function addItem(data: {
   name: string
   count: number
+  unit?: Unit
   priority: Priority
   label: string | null
 }): Promise<Item> {
   const { data: item, error } = await supabase
     .from('items')
-    .insert(data)
+    .insert({ unit: 'count', ...data })
     .select()
     .single()
   if (error) throw error
@@ -28,7 +29,7 @@ export async function addItem(data: {
 
 export async function updateItem(
   id: string,
-  data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label' | 'checked'>>
+  data: Partial<Pick<Item, 'name' | 'count' | 'unit' | 'priority' | 'label' | 'checked'>>
 ): Promise<Item> {
   const { data: item, error } = await supabase
     .from('items')

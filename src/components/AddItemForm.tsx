@@ -4,7 +4,8 @@ import { useEffect, useRef, useState } from 'react'
 import { addItem, updateItem } from '@/lib/itemsService'
 import { lookupCatalog, upsertCatalog } from '@/lib/catalogService'
 import { getTagColor } from '@/lib/tags'
-import type { Item, Priority } from '@/lib/types'
+import { UNITS, getUnit, formatQuantity, roundQuantity } from '@/lib/units'
+import type { Item, Priority, Unit } from '@/lib/types'
 import TagPickerSheet from './TagPickerSheet'
 
 type Props = {
@@ -18,6 +19,7 @@ const MAX_SUGGESTIONS = 6
 export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
   const [name, setName] = useState('')
   const [count, setCount] = useState(1)
+  const [unit, setUnit] = useState<Unit>('count')
   const [priority, setPriority] = useState<Priority>('normal')
   const [tag, setTag] = useState<string | null>(null)
   const [tagPickerOpen, setTagPickerOpen] = useState(false)
@@ -81,9 +83,29 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
     setName(item.name)
     setSelectedExisting(item)
     if (item.label) setTag(item.label)
+    setUnit(item.unit)
+    setCount(getUnit(item.unit).step)
     setSuggestions([])
     setShowSuggestions(false)
     setHighlightedIndex(-1)
+  }
+
+  function handleUnitChange(next: Unit) {
+    setUnit(next)
+    setCount(getUnit(next).step)
+  }
+
+  function decrementCount() {
+    const step = getUnit(unit).step
+    setCount((c) => {
+      const next = roundQuantity(c - step)
+      return next < step ? step : next
+    })
+  }
+
+  function incrementCount() {
+    const step = getUnit(unit).step
+    setCount((c) => roundQuantity(c + step))
   }
 
   function handleNameKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
@@ -160,6 +182,7 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
         const item = await addItem({
           name: trimmedName,
           count,
+          unit,
           priority,
           label: resolvedTag,
         })
@@ -168,6 +191,7 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
       }
       setName('')
       setCount(1)
+      setUnit('count')
       setPriority('normal')
       setTag(null)
       setSelectedExisting(null)
@@ -207,7 +231,7 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
             <p className="mt-1 text-xs text-accent-green">
               {selectedExisting.checked
                 ? 'Already bought — this will add it back to your list'
-                : `Already on your list (${selectedExisting.count}) — this will update the quantity`}
+                : `Already on your list (${formatQuantity(selectedExisting.count, selectedExisting.unit)}) — this will update the quantity`}
             </p>
           )}
 
@@ -240,7 +264,7 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
                       <span className="truncate text-warm-text">{item.name}</span>
                     </span>
                     <span className="text-[10px] uppercase tracking-wide text-warm-fade flex-shrink-0">
-                      {item.checked ? 'Bought · add again' : `In list · ${item.count}`}
+                      {item.checked ? 'Bought · add again' : `In list · ${formatQuantity(item.count, item.unit)}`}
                     </span>
                   </li>
                 )
@@ -250,22 +274,38 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
         </div>
 
         <p className="text-[10px] font-semibold tracking-[0.8px] uppercase text-warm-sub mb-1.5">Count</p>
-        <div className="flex items-center bg-warm-bg border border-warm-muted rounded-xl mb-3.5 overflow-hidden h-[52px]">
-          <button
-            type="button"
-            onClick={() => setCount((c) => Math.max(1, c - 1))}
-            className="flex-none w-16 h-full flex items-center justify-center text-[28px] text-warm-sub hover:bg-warm-border"
+        <div className="flex items-stretch gap-2 mb-3.5">
+          <div className="flex flex-1 items-center bg-warm-bg border border-warm-muted rounded-xl overflow-hidden h-[52px] min-w-0">
+            <button
+              type="button"
+              onClick={decrementCount}
+              className="flex-none w-16 h-full flex items-center justify-center text-[28px] text-warm-sub hover:bg-warm-border"
+            >
+              −
+            </button>
+            <span className="flex-1 text-center text-[18px] font-medium text-warm-text truncate px-1">
+              {formatQuantity(count, unit)}
+            </span>
+            <button
+              type="button"
+              onClick={incrementCount}
+              className="flex-none w-16 h-full flex items-center justify-center text-[28px] text-warm-sub hover:bg-warm-border"
+            >
+              +
+            </button>
+          </div>
+          <select
+            value={unit}
+            onChange={(e) => handleUnitChange(e.target.value as Unit)}
+            aria-label="Unit"
+            className="flex-none w-[76px] h-[52px] bg-warm-bg border border-warm-muted rounded-xl px-1 text-sm text-warm-text focus:outline-none focus:ring-2 focus:ring-accent-green appearance-none text-center"
           >
-            −
-          </button>
-          <span className="flex-1 text-center text-[22px] font-medium text-warm-text">{count}</span>
-          <button
-            type="button"
-            onClick={() => setCount((c) => c + 1)}
-            className="flex-none w-16 h-full flex items-center justify-center text-[28px] text-warm-sub hover:bg-warm-border"
-          >
-            +
-          </button>
+            {UNITS.map((u) => (
+              <option key={u.value} value={u.value}>
+                {u.label}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="grid grid-cols-2 gap-2.5 mb-4">
@@ -301,13 +341,15 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
           </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full py-[14px] rounded-xl bg-warm-text text-white text-[15px] font-medium disabled:opacity-50"
-        >
-          {submitting ? 'Adding…' : selectedExisting ? 'Update list' : 'Add to list'}
-        </button>
+        <div className="sticky bottom-0 bg-warm-card pt-2 pb-[env(safe-area-inset-bottom)]">
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full py-[14px] rounded-xl bg-warm-text text-white text-[15px] font-medium disabled:opacity-50"
+          >
+            {submitting ? 'Adding…' : selectedExisting ? 'Update list' : 'Add to list'}
+          </button>
+        </div>
       </form>
 
       <TagPickerSheet

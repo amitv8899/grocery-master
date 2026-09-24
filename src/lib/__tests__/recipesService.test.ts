@@ -179,6 +179,7 @@ describe('addRecipeToList', () => {
     id: 'i1',
     name: 'Pasta',
     count: 1,
+    unit: 'count' as const,
     priority: 'normal' as const,
     label: null,
     checked: false,

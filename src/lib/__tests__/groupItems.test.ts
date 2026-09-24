@@ -6,6 +6,7 @@ function makeItem(overrides: Partial<Item> = {}): Item {
     id: Math.random().toString(),
     name: 'item',
     count: 1,
+    unit: 'count',
     priority: 'normal',
     checked: false,
     label: null,

@@ -1,8 +1,10 @@
 export type Priority = 'low' | 'normal' | 'high'
+export type Unit = 'count' | 'g' | 'kg' | 'ml' | 'l' | 'oz'
 
 export type Ingredient = {
   name: string
   count: number
+  unit?: Unit
   priority: Priority
   label: string | null
 }
@@ -18,6 +20,7 @@ export type Database = {
           id: string
           name: string
           count: number
+          unit: Unit
           priority: Priority
           checked: boolean
           label: string | null
@@ -28,6 +31,7 @@ export type Database = {
           id?: string
           name: string
           count?: number
+          unit?: Unit
           priority?: Priority
           checked?: boolean
           label?: string | null
@@ -38,6 +42,7 @@ export type Database = {
           id?: string
           name?: string
           count?: number
+          unit?: Unit
           priority?: Priority
           checked?: boolean
           label?: string | null
