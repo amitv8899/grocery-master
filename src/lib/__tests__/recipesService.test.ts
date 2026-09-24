@@ -183,6 +183,7 @@ describe('addRecipeToList', () => {
     priority: 'normal' as const,
     label: null,
     checked: false,
+    from_recipe: false,
     deleted_at: null,
     created_at: '2024-01-01T00:00:00Z',
   }
@@ -228,7 +229,7 @@ describe('addRecipeToList', () => {
     const recipe = { ...mockRecipe, ingredients: [{ name: 'Sauce', count: 1, priority: 'high' as const, label: 'Pantry' }] }
     await addRecipeToList(recipe, [])
 
-    expect(mockAddItem).toHaveBeenCalledWith({ name: 'Sauce', count: 1, unit: 'count', priority: 'high', label: 'Pantry' })
+    expect(mockAddItem).toHaveBeenCalledWith({ name: 'Sauce', count: 1, unit: 'count', priority: 'high', label: 'Pantry', from_recipe: true })
   })
 
   it('passes the ingredient\'s unit through to addItem', async () => {
@@ -241,7 +242,7 @@ describe('addRecipeToList', () => {
     }
     await addRecipeToList(recipe, [])
 
-    expect(mockAddItem).toHaveBeenCalledWith({ name: 'Flour', count: 500, unit: 'g', priority: 'normal', label: null })
+    expect(mockAddItem).toHaveBeenCalledWith({ name: 'Flour', count: 500, unit: 'g', priority: 'normal', label: null, from_recipe: true })
   })
 
   it('match is case-insensitive and trims whitespace', async () => {

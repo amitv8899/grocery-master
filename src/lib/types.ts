@@ -24,6 +24,7 @@ export type Database = {
           priority: Priority
           checked: boolean
           label: string | null
+          from_recipe: boolean
           deleted_at: string | null
           created_at: string
         }
@@ -35,6 +36,7 @@ export type Database = {
           priority?: Priority
           checked?: boolean
           label?: string | null
+          from_recipe?: boolean
           deleted_at?: string | null
           created_at?: string
         }
@@ -46,6 +48,7 @@ export type Database = {
           priority?: Priority
           checked?: boolean
           label?: string | null
+          from_recipe?: boolean
           deleted_at?: string | null
           created_at?: string
         }

@@ -23,6 +23,7 @@ const fakeItem: Item = {
   priority: 'normal',
   checked: false,
   label: null,
+  from_recipe: false,
   deleted_at: null,
   created_at: new Date().toISOString(),
 }
@@ -35,6 +36,7 @@ const existingChocolate: Item = {
   priority: 'normal',
   checked: false,
   label: null,
+  from_recipe: false,
   deleted_at: null,
   created_at: new Date().toISOString(),
 }
@@ -47,6 +49,7 @@ const existingChocolateMilk: Item = {
   priority: 'normal',
   checked: true,
   label: 'Dairy',
+  from_recipe: false,
   deleted_at: null,
   created_at: new Date().toISOString(),
 }

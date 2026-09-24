@@ -10,6 +10,7 @@ function makeItem(overrides: Partial<Item> = {}): Item {
     priority: 'normal',
     checked: false,
     label: null,
+    from_recipe: false,
     deleted_at: null,
     created_at: new Date().toISOString(),
     ...overrides,

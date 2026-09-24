@@ -109,6 +109,7 @@ export async function addRecipeToList(recipe: Recipe, currentItems: Item[]): Pro
         unit: ingredient.unit ?? 'count',
         priority: ingredient.priority,
         label: ingredient.label?.trim() || null,
+        from_recipe: true,
       })
       results.push(inserted)
     }

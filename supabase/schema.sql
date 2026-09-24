@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS public.items (
                           CHECK (priority IN ('low', 'normal', 'high')),
   checked     BOOLEAN     NOT NULL DEFAULT false,
   label       TEXT,
+  from_recipe BOOLEAN     NOT NULL DEFAULT false,
   deleted_at  TIMESTAMPTZ,
   created_at  TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -69,3 +70,10 @@ BEGIN
     ADD CONSTRAINT items_unit_check CHECK (unit IN ('count', 'g', 'kg', 'ml', 'l', 'oz'));
 EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
+
+-- ============================================================
+-- Migration: track items created from a recipe, so checking them
+-- as bought deletes them outright instead of moving them to the
+-- Bought section (safe to re-run on an already deployed database)
+-- ============================================================
+ALTER TABLE public.items ADD COLUMN IF NOT EXISTS from_recipe BOOLEAN NOT NULL DEFAULT false;

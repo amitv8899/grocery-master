@@ -151,6 +151,16 @@ export default function Home() {
   }
 
   async function handleCheck(id: string) {
+    const item = items.find((i) => i.id === id)
+    if (item?.from_recipe) {
+      setItems((prev) => prev.filter((i) => i.id !== id))
+      try {
+        await deleteItem(id)
+      } catch {
+        load()
+      }
+      return
+    }
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, checked: true } : i)))
     try {
       await checkItem(id)

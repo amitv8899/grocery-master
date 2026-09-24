@@ -12,6 +12,8 @@ jest.mock('@/lib/catalogService')
 
 const mockFetchItems = itemsService.fetchItems as jest.Mock
 const mockClearBoughtItems = itemsService.clearBoughtItems as jest.Mock
+const mockCheckItem = itemsService.checkItem as jest.Mock
+const mockDeleteItem = itemsService.deleteItem as jest.Mock
 const mockFetchRecipes = recipesService.fetchRecipes as jest.Mock
 const mockLookupCatalog = catalogService.lookupCatalog as jest.Mock
 
@@ -24,6 +26,7 @@ function makeItem(overrides: Partial<Item> = {}): Item {
     priority: 'normal',
     checked: false,
     label: 'Produce',
+    from_recipe: false,
     deleted_at: null,
     created_at: new Date().toISOString(),
     ...overrides,
@@ -35,6 +38,8 @@ beforeEach(() => {
   mockFetchRecipes.mockResolvedValue([])
   mockLookupCatalog.mockResolvedValue(null)
   mockClearBoughtItems.mockResolvedValue(undefined)
+  mockCheckItem.mockResolvedValue(undefined)
+  mockDeleteItem.mockResolvedValue(undefined)
 })
 
 describe('page.tsx', () => {
@@ -101,5 +106,33 @@ describe('page.tsx', () => {
     await waitFor(() => expect(mockClearBoughtItems).toHaveBeenCalled())
     expect(screen.queryByText('Eggs')).not.toBeInTheDocument()
     expect(screen.getByText('Milk')).toBeInTheDocument()
+  })
+
+  it('checking a manually-added item moves it to the Bought section', async () => {
+    mockFetchItems.mockResolvedValue([makeItem({ name: 'Milk', from_recipe: false })])
+
+    await act(async () => {
+      render(<Home />)
+    })
+
+    fireEvent.click(screen.getByLabelText('Mark as bought'))
+
+    await waitFor(() => expect(mockCheckItem).toHaveBeenCalled())
+    expect(mockDeleteItem).not.toHaveBeenCalled()
+    expect(screen.getByText('Milk')).toBeInTheDocument()
+  })
+
+  it('checking a recipe-sourced item deletes it instead of moving to Bought', async () => {
+    mockFetchItems.mockResolvedValue([makeItem({ name: 'Flour', from_recipe: true })])
+
+    await act(async () => {
+      render(<Home />)
+    })
+
+    fireEvent.click(screen.getByLabelText('Mark as bought'))
+
+    await waitFor(() => expect(mockDeleteItem).toHaveBeenCalled())
+    expect(mockCheckItem).not.toHaveBeenCalled()
+    expect(screen.queryByText('Flour')).not.toBeInTheDocument()
   })
 })
