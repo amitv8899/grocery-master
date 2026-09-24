@@ -96,6 +96,11 @@ export default function Home() {
     setSheetOpen(false)
   }
 
+  function handleMerge(item: Item) {
+    setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)))
+    setSheetOpen(false)
+  }
+
   function handleRecipeAdd(recipe: Recipe) {
     setRecipes((prev) => [...prev, recipe])
     setRecipeSheetMode(null)
@@ -328,7 +333,7 @@ export default function Home() {
 
       {/* Add item sheet */}
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
-        <AddItemForm onAdd={handleAdd} />
+        <AddItemForm items={items} onAdd={handleAdd} onMerge={handleMerge} />
       </BottomSheet>
 
       {/* Manual recipe overlay */}
