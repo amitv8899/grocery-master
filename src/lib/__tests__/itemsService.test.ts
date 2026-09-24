@@ -67,7 +67,20 @@ describe('addItem', () => {
 
     const payload = { name: 'Milk', count: 2, priority: 'normal' as const, label: null }
     await addItem(payload).catch(() => {})
-    expect(chain.insert).toHaveBeenCalledWith(payload)
+    expect(chain.insert).toHaveBeenCalledWith({ unit: 'count', ...payload })
+  })
+
+  it('defaults unit to "count" unless one is passed', async () => {
+    const chain = setupChain({ data: { id: '1' }, error: null })
+    chain.single = jest.fn(() => Promise.resolve({ data: { id: '1' }, error: null }))
+    chain.select = jest.fn(() => chain)
+    chain.insert = jest.fn(() => chain)
+    mockFrom.mockReturnValue(chain)
+
+    await addItem({ name: 'Milk', count: 2, unit: 'l', priority: 'normal', label: null }).catch(() => {})
+    expect(chain.insert).toHaveBeenCalledWith(
+      expect.objectContaining({ unit: 'l' })
+    )
   })
 
   it('throws on Supabase error', async () => {

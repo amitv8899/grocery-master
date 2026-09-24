@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { Item, Recipe, ImportResult } from '@/lib/types'
-import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem } from '@/lib/itemsService'
+import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
 import { fetchRecipes, deleteRecipe, addRecipeToList } from '@/lib/recipesService'
 import { upsertCatalog } from '@/lib/catalogService'
 import { getTagByName } from '@/lib/tags'
@@ -96,6 +96,11 @@ export default function Home() {
     setSheetOpen(false)
   }
 
+  function handleMerge(item: Item) {
+    setItems((prev) => prev.map((i) => (i.id === item.id ? item : i)))
+    setSheetOpen(false)
+  }
+
   function handleRecipeAdd(recipe: Recipe) {
     setRecipes((prev) => [...prev, recipe])
     setRecipeSheetMode(null)
@@ -161,7 +166,7 @@ export default function Home() {
     }
   }
 
-  async function handleUpdate(id: string, data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label'>>) {
+  async function handleUpdate(id: string, data: Partial<Pick<Item, 'name' | 'count' | 'unit' | 'priority' | 'label'>>) {
     setItems((prev) =>
       prev.map((i) => (i.id === id ? { ...i, ...data } : i))
     )
@@ -186,6 +191,16 @@ export default function Home() {
     setItems((prev) => prev.map((i) => (i.id === id ? { ...i, checked: false } : i)))
     try {
       await uncheckItem(id)
+    } catch {
+      load()
+    }
+  }
+
+  async function handleClearBought() {
+    const boughtIds = new Set(boughtItems.map((i) => i.id))
+    setItems((prev) => prev.filter((i) => !boughtIds.has(i.id)))
+    try {
+      await clearBoughtItems()
     } catch {
       load()
     }
@@ -275,11 +290,19 @@ export default function Home() {
               ))}
               {boughtItems.length > 0 && (
                 <div className="mb-2 mt-1">
-                  <div className="flex items-center gap-2 px-1 pt-2.5 pb-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-warm-muted" />
-                    <span className="text-[10px] font-semibold tracking-widest uppercase text-warm-fade">
-                      Bought
-                    </span>
+                  <div className="flex items-center justify-between px-1 pt-2.5 pb-1.5">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2.5 h-2.5 rounded-full flex-shrink-0 bg-warm-muted" />
+                      <span className="text-[10px] font-semibold tracking-widest uppercase text-warm-fade">
+                        Bought
+                      </span>
+                    </div>
+                    <button
+                      onClick={handleClearBought}
+                      className="text-[11px] font-medium text-warm-sub hover:text-warm-text"
+                    >
+                      Clear
+                    </button>
                   </div>
                   {boughtItems.map((item) => (
                     <ItemRow
@@ -328,7 +351,7 @@ export default function Home() {
 
       {/* Add item sheet */}
       <BottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)}>
-        <AddItemForm onAdd={handleAdd} />
+        <AddItemForm items={items} onAdd={handleAdd} onMerge={handleMerge} />
       </BottomSheet>
 
       {/* Manual recipe overlay */}

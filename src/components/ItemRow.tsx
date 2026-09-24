@@ -2,15 +2,16 @@
 
 import { useState } from 'react'
 import { IconTrash } from '@tabler/icons-react'
-import type { Item, Priority } from '@/lib/types'
+import type { Item, Priority, Unit } from '@/lib/types'
 import { getTagColor } from '@/lib/tags'
+import { UNITS, getUnit, formatQuantity, roundQuantity } from '@/lib/units'
 import TagPickerSheet from './TagPickerSheet'
 
 type Props = {
   item: Item
   onCheck: () => void
   onUncheck?: () => void
-  onUpdate: (data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label'>>) => void
+  onUpdate: (data: Partial<Pick<Item, 'name' | 'count' | 'unit' | 'priority' | 'label'>>) => void
   onDelete: () => void
   onTagChange: (tagName: string | null) => void
 }
@@ -25,28 +26,41 @@ export default function ItemRow({ item, onCheck, onUncheck, onUpdate, onDelete, 
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(item.name)
   const [priority, setPriority] = useState<Priority>(item.priority)
+  const [unit, setUnit] = useState<Unit>(item.unit)
   const [tagPickerOpen, setTagPickerOpen] = useState(false)
 
   const tagColor = getTagColor(item.label)
 
   function handleSave() {
-    onUpdate({ name: name.trim() || item.name, priority })
+    const data: Partial<Pick<Item, 'name' | 'priority' | 'unit' | 'count'>> = {
+      name: name.trim() || item.name,
+      priority,
+    }
+    if (unit !== item.unit) {
+      data.unit = unit
+      data.count = getUnit(unit).step
+    }
+    onUpdate(data)
     setEditing(false)
   }
 
   function handleCancel() {
     setName(item.name)
     setPriority(item.priority)
+    setUnit(item.unit)
     setEditing(false)
   }
 
   function handleDecrement() {
-    if (item.count <= 1) return
-    onUpdate({ count: item.count - 1 })
+    const step = getUnit(item.unit).step
+    const next = roundQuantity(item.count - step)
+    if (next < step) return
+    onUpdate({ count: next })
   }
 
   function handleIncrement() {
-    onUpdate({ count: item.count + 1 })
+    const step = getUnit(item.unit).step
+    onUpdate({ count: roundQuantity(item.count + step) })
   }
 
   function handleTagSelect(tagName: string | null) {
@@ -73,6 +87,18 @@ export default function ItemRow({ item, onCheck, onUncheck, onUpdate, onDelete, 
             <option value="high">#1 — High</option>
             <option value="normal">#2 — Normal</option>
             <option value="low">#3 — Low</option>
+          </select>
+          <select
+            value={unit}
+            onChange={(e) => setUnit(e.target.value as Unit)}
+            aria-label="Unit"
+            className="w-20 h-10 px-1 bg-warm-bg border border-warm-muted rounded-lg text-sm text-warm-text focus:outline-none focus:ring-2 focus:ring-accent-green"
+          >
+            {UNITS.map((u) => (
+              <option key={u.value} value={u.value}>
+                {u.label}
+              </option>
+            ))}
           </select>
         </div>
         <div className="flex gap-2">
@@ -169,8 +195,8 @@ export default function ItemRow({ item, onCheck, onUncheck, onUpdate, onDelete, 
             >
               −
             </button>
-            <span className="w-[26px] text-center text-sm font-medium text-warm-text">
-              {item.count}
+            <span className="px-1 min-w-[26px] text-center text-sm font-medium text-warm-text whitespace-nowrap">
+              {formatQuantity(item.count, item.unit)}
             </span>
             <button
               onClick={handleIncrement}

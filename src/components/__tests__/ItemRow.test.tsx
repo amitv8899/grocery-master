@@ -7,6 +7,7 @@ const baseItem: Item = {
   id: '1',
   name: 'Apples',
   count: 3,
+  unit: 'count',
   priority: 'normal',
   checked: false,
   label: 'Produce',
@@ -63,5 +64,41 @@ describe('ItemRow', () => {
     render(<ItemRow item={baseItem} {...defaultProps} onDelete={onDelete} />)
     fireEvent.click(screen.getByLabelText('Delete item'))
     expect(onDelete).toHaveBeenCalled()
+  })
+
+  it('non-count unit → displays formatted quantity and steps by the unit amount', () => {
+    const gramItem: Item = { ...baseItem, count: 500, unit: 'g' }
+    const onUpdate = jest.fn()
+    render(<ItemRow item={gramItem} {...defaultProps} onUpdate={onUpdate} />)
+
+    expect(screen.getByText('500 g')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('+'))
+    expect(onUpdate).toHaveBeenCalledWith({ count: 550 })
+
+    fireEvent.click(screen.getByText('−'))
+    expect(onUpdate).toHaveBeenCalledWith({ count: 450 })
+  })
+
+  it('decrementing below one unit step is a no-op', () => {
+    const gramItem: Item = { ...baseItem, count: 50, unit: 'g' }
+    const onUpdate = jest.fn()
+    render(<ItemRow item={gramItem} {...defaultProps} onUpdate={onUpdate} />)
+
+    fireEvent.click(screen.getByText('−'))
+    expect(onUpdate).not.toHaveBeenCalled()
+  })
+
+  it('changing unit while editing resets the quantity to that unit\'s step', () => {
+    const onUpdate = jest.fn()
+    render(<ItemRow item={baseItem} {...defaultProps} onUpdate={onUpdate} />)
+    fireEvent.click(screen.getByText('Apples'))
+
+    fireEvent.change(screen.getByLabelText('Unit'), { target: { value: 'kg' } })
+    fireEvent.click(screen.getByRole('button', { name: /save/i }))
+
+    expect(onUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({ unit: 'kg', count: 0.5 })
+    )
   })
 })

@@ -8,7 +8,7 @@ type Props = {
   label: string
   items: Item[]
   onCheck: (id: string) => void
-  onUpdate: (id: string, data: Partial<Pick<Item, 'name' | 'count' | 'priority' | 'label'>>) => void
+  onUpdate: (id: string, data: Partial<Pick<Item, 'name' | 'count' | 'unit' | 'priority' | 'label'>>) => void
   onDelete: (id: string) => void
   onTagChange: (id: string, tagName: string | null) => void
 }
