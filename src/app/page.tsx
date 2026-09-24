@@ -144,8 +144,9 @@ export default function Home() {
       const n = recipe.ingredients.length
       showToast(`Added ${n} ingredient${n === 1 ? '' : 's'}`)
       setActiveTab('list')
-    } catch {
-      showToast('Failed to add to list.')
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : ''
+      showToast(detail ? `Failed to add to list: ${detail}` : 'Failed to add to list.')
     }
   }
 
