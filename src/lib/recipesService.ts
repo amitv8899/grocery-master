@@ -106,6 +106,7 @@ export async function addRecipeToList(recipe: Recipe, currentItems: Item[]): Pro
       const inserted = await addItem({
         name: ingredient.name.trim(),
         count: ingredient.count,
+        unit: ingredient.unit ?? 'count',
         priority: ingredient.priority,
         label: ingredient.label?.trim() || null,
       })
