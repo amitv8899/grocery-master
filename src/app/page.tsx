@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { Item, Recipe, ImportResult } from '@/lib/types'
-import { fetchItems, checkItem, uncheckItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
+import { fetchItems, errorDetail, checkItem, uncheckItem, updateItem, deleteItem, clearBoughtItems } from '@/lib/itemsService'
 import { fetchRecipes, deleteRecipe, addRecipeToList } from '@/lib/recipesService'
 import { upsertCatalog } from '@/lib/catalogService'
 import { getTagByName } from '@/lib/tags'
@@ -145,7 +145,7 @@ export default function Home() {
       showToast(`Added ${n} ingredient${n === 1 ? '' : 's'}`)
       setActiveTab('list')
     } catch (err) {
-      const detail = err instanceof Error ? err.message : ''
+      const detail = errorDetail(err)
       showToast(detail ? `Failed to add to list: ${detail}` : 'Failed to add to list.')
     }
   }

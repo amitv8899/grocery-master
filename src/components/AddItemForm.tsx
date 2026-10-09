@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { addItem, updateItem } from '@/lib/itemsService'
+import { addItem, updateItem, errorDetail } from '@/lib/itemsService'
 import { lookupCatalog, upsertCatalog } from '@/lib/catalogService'
 import { getTagColor } from '@/lib/tags'
 import { UNITS, getUnit, formatQuantity, roundQuantity } from '@/lib/units'
@@ -198,7 +198,7 @@ export default function AddItemForm({ items = [], onAdd, onMerge }: Props) {
       setSuggestions([])
       setShowSuggestions(false)
     } catch (err) {
-      const detail = err instanceof Error ? err.message : ''
+      const detail = errorDetail(err)
       setNameError(detail ? `Failed to add item: ${detail}` : 'Failed to add item. Try again.')
     } finally {
       setSubmitting(false)

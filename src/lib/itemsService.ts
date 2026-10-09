@@ -21,7 +21,7 @@ export async function addItem(data: {
 }): Promise<Item> {
   const { data: item, error } = await supabase
     .from('items')
-    .insert({ unit: 'count', from_recipe: false, ...data })
+    .insert({ unit: 'count', ...data })
     .select()
     .single()
   if (error) throw error
@@ -73,4 +73,13 @@ export async function clearBoughtItems(): Promise<void> {
     .eq('checked', true)
     .is('deleted_at', null)
   if (error) throw error
+}
+
+// Supabase errors are plain objects (not Error instances), so read `.message` off either.
+export function errorDetail(err: unknown): string {
+  if (err && typeof err === 'object' && 'message' in err) {
+    const m = (err as { message?: unknown }).message
+    if (typeof m === 'string') return m
+  }
+  return ''
 }
