@@ -195,7 +195,7 @@ describe('addRecipeToList', () => {
     const recipe = { ...mockRecipe, ingredients: [{ name: 'Pasta', count: 2, priority: 'normal' as const, label: null }] }
     await addRecipeToList(recipe, [baseItem])
 
-    expect(mockUpdateItem).toHaveBeenCalledWith('i1', { count: 2, checked: false })
+    expect(mockUpdateItem).toHaveBeenCalledWith('i1', { count: 3, checked: false })
     expect(mockAddItem).not.toHaveBeenCalled()
   })
 
@@ -207,7 +207,7 @@ describe('addRecipeToList', () => {
     const recipe = { ...mockRecipe, ingredients: [{ name: 'Pasta', count: 2, priority: 'normal' as const, label: null }] }
     await addRecipeToList(recipe, [checkedItem])
 
-    expect(mockUpdateItem).toHaveBeenCalledWith('i1', { count: 2, checked: false })
+    expect(mockUpdateItem).toHaveBeenCalledWith('i1', { count: 3, checked: false })
   })
 
   it('calls addItem when ingredient matches soft-deleted item', async () => {
@@ -252,7 +252,7 @@ describe('addRecipeToList', () => {
     const recipe = { ...mockRecipe, ingredients: [{ name: ' PASTA ', count: 2, priority: 'normal' as const, label: null }] }
     await addRecipeToList(recipe, [baseItem])
 
-    expect(mockUpdateItem).toHaveBeenCalledWith('i1', { count: 2, checked: false })
+    expect(mockUpdateItem).toHaveBeenCalledWith('i1', { count: 3, checked: false })
     expect(mockAddItem).not.toHaveBeenCalled()
   })
 

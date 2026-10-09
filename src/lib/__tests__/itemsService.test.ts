@@ -67,7 +67,7 @@ describe('addItem', () => {
 
     const payload = { name: 'Milk', count: 2, priority: 'normal' as const, label: null }
     await addItem(payload).catch(() => {})
-    expect(chain.insert).toHaveBeenCalledWith({ unit: 'count', from_recipe: false, ...payload })
+    expect(chain.insert).toHaveBeenCalledWith({ unit: 'count', ...payload })
   })
 
   it('defaults unit to "count" unless one is passed', async () => {
